@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Era ScholarSuites | Verified Housing Kenya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .kenya-gradient { background: linear-gradient(135deg, #004d00 0%, #000000 100%); }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); }
+    </style>
+</head>
+<body class="bg-slate-50 pb-24">
+    <!-- NAVIGATION -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="bg-green-800 p-1.5 rounded-lg text-white"><i class="fa-solid fa-house-chimney"></i></div>
+            <h1 class="font-bold text-lg text-green-950">New Era <span class="text-red-700 italic">Suites</span></h1>
+        </div>
+        <div id="nav-action">
+            <button onclick="showAuth('login')" class="text-xs font-bold text-green-900 bg-green-50 px-4 py-2 rounded-full border border-green-100">Login</button>
+        </div>
+    </nav>
+    <!-- HERO -->
+    <header class="kenya-gradient text-white pt-32 pb-20 px-6 text-center rounded-b-[45px] shadow-2xl relative">
+        <div class="relative z-10">
+            <h2 class="text-3xl font-800 mb-2 tracking-tight">Your Safe Haven <br>Near Campus</h2>
+            <p class="text-green-200 text-xs mb-8 opacity-80">Verified hostels & suites near JKUAT, UoN, KU...</p>
+            <div class="bg-white rounded-3xl p-1.5 flex items-center shadow-2xl max-w-md mx-auto">
+                <div class="p-3 text-green-700" onclick="getBoltLocation()"><i class="fa-solid fa-location-crosshairs text-xl animate-pulse"></i></div>
+                <input id="search-input" type="text" placeholder="Detecting your campus..." class="w-full p-3 text-slate-900 outline-none font-semibold text-sm" readonly>
+                <button onclick="fetchHouses()" class="bg-red-700 text-white px-5 py-3.5 rounded-2xl font-bold text-sm">Find</button>
+            </div>
+        </div>
+    </header>
+    <!-- LISTINGS -->
+    <main class="px-6 mt-10">
+        <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-800 text-slate-900">Suites Near You</h3></div>
+        <div id="house-display" class="space-y-6"><div class="text-center py-10 text-slate-400 text-sm">Waiting for GPS...</div></div>
+    </main>
+    <!-- FOUNDER'S SUPPORT -->
+    <section class="p-6">
+        <div class="bg-slate-950 text-white p-6 rounded-[35px] flex items-center gap-5 border-b-4 border-green-700 shadow-xl">
+            <div class="w-20 h-20 rounded-full border-2 border-white overflow-hidden bg-slate-800 flex-shrink-0">
+                <img src="https://storage.googleapis.com/pai-images/989be502012a492881846b07c8ef4a9f.jpeg" alt="Owner" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1">
+                <h4 class="font-bold text-md">Founder's Desk</h4>
+                <a href="https://wa.me/254798791915?text=Hello%20New%20Era%20Founder" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-[10px] inline-flex items-center gap-2">WHATSAPP ME <i class="fa-brands fa-whatsapp text-sm"></i></a>
+            </div>
+        </div>
+    </section>
+    <!-- AUTH MODAL -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-md flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-md rounded-[35px] p-10 shadow-2xl">
+            <input id="auth-email" type="email" placeholder="Email" class="w-full p-4 bg-slate-50 rounded-2xl mb-4 border font-bold"><input id="auth-password" type="password" placeholder="Password" class="w-full p-4 bg-slate-50 rounded-2xl mb-8 border font-bold"><button onclick="handleAuth()" class="w-full bg-green-800 text-white py-4 rounded-2xl font-bold">Continue</button>
+        </div>
+    </div>
+    <script>
+        const SUPABASE_URL = 'https://liqnrwvigwgiwfnmfndg.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_UszLN6kCijR4xYKf4tBrew_2HrTsriU';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        async function fetchHouses() {
+            const { data } = await sb.from('houses').select('*');
+            if (data) document.getElementById('house-display').innerHTML = data.map(h => `<div class="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100"><h4 class="font-extrabold">${h.title}</h4><p class="text-green-800 font-extrabold text-xl">Ksh ${h.price}</p></div>`).join('');
+        }
+        function getBoltLocation() { if (navigator.geolocation) { navigator.geolocation.getCurrentPosition((pos) => { document.getElementById('search-input').value = `Live: ${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)}`; fetchHouses(); }); } }
+        async function handleAuth() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const { error } = await sb.auth.signUp({ email, password });
+            if (error) { const { error: logErr } = await sb.auth.signInWithPassword({ email, password }); if (logErr) alert(logErr.message); else alert("Welcome back!"); } else alert("Check email for link!");
+        }
+        function showAuth() { document.getElementById('auth-modal').classList.remove('hidden'); }
+        window.onload = () => getBoltLocation();
+    </script>
+</body>
+</html>
